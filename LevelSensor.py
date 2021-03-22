@@ -23,7 +23,7 @@ def measure(PortName):
                 continue
             
             try: 
-                SensorData = TestData.deconde('utf-8').lstrip('R')
+                SensorData = TestData.decode('utf-8').lstrip('R')
             except UnicodeDecodeError:
                 continue
             
@@ -37,23 +37,3 @@ def measure(PortName):
             
     Ser.close()
     raise RuntimeError("Expected data not received")
-    
-Range = 10000
-SleepTime = 5
-minMM = 9999
-maxMM = 0
-
-while True: 
-    mm = measure(SerialDevice)
-    if mm >= Range:
-        print("No Target Found.")
-        sleep(SleepTime)
-        continue
-        
-    if mm < minMM:
-        minMM = mm
-    if mm > maxMM:
-        maxMM = mm
-        
-    print('Distance: ', mm, " min: ", minMM, " max: ", maxMM)
-    sleep(SleepTime)
