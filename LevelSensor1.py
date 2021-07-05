@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul  5 20:53:52 2021
+UWHS LEVEL SENSOR DATA LOGGING SCRIPT 
+=============================
+MaxBotix MB7366, Serial Output. 
 
-@author: sohqi
+Created by Qiao Yan Soh 11 Mar 2021
+Last updated 5 July 2021
 """
 
 import time 
 from serial import Serial
 
-MaxWait = 3 # seconds to try for a good reading before quitting
+MaxWait = 3     # Number of seconds to wait for reading
 
-def Measure(portName):
+def Measure(portName):  
     ser = Serial(portName, 9600, 8, 'N', 1, timeout=1)
     timeStart = time.time()
     valueCount = 0
@@ -50,31 +53,31 @@ def SendData(CurrentReading):
     print('Data Sent' + CurrentReading)
 
 #%% 
-serialDevice = "/dev/ttyAMA0" # default for RaspberryPi
+serialDevice = "/dev/ttyAMA0"   # default for RaspberryPi
 
-MaxRange = 10000
-SensorHeight = 2000
+MaxRange = 10000        # Outputs in mm.
+SensorHeight = 2000     # mm. TO BE ADJUSTED ACCORDINGLY
 
-ReadInterval = 60
+ReadInterval = 60       # Seconds
+
+# ----- Set up storage file 
 File = open('LevelSensorData.csv', 'a')
 File.write('Datetime, Water Level \n')
 File.close()
 
-time.sleep(60 - time.localtime().tm_sec)   # wait to start on the minute
+time.sleep(60 - time.localtime().tm_sec)   # Wait to start on the minute
 
-while True:  # Needs to calculate water level from height installed             
+while True:          
     MeasuredDistance = Measure(serialDevice)
     MeasureTime = time.time()
     if MeasuredDistance >= MaxRange:
         Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + 'NaN' + '\n'
-        print('No Target')
     else:
         Level = SensorHeight - MeasuredDistance
         Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + str(Level) + '\n'
     WriteData(Reading)
     SendData(Reading)
-    print(Reading)
-    time.sleep(ReadInterval)
+    time.sleep(ReadInterval)    # Wait.
 
     
     
