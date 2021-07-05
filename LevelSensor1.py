@@ -15,7 +15,7 @@ def Measure(portName):
     timeStart = time.time()
     valueCount = 0
 
-    while time.time() < timeStart + maxwait:
+    while time.time() < timeStart + MaxWait:
         if ser.inWaiting():
             bytesToRead = ser.inWaiting()
             valueCount += 1
@@ -53,24 +53,29 @@ def SendData(CurrentReading):
 serialDevice = "/dev/ttyAMA0" # default for RaspberryPi
 
 MaxRange = 10000
-ReadInterval = 60
-SensorHeight = 200
+SensorHeight = 2000
 
-while True:  # Needs to calculate water level from height installed     
-    start_time = time.time()
-    
-    while time.time() - start_time <= ReadInterval:
-        MeasuredDistance = Measure(serialDevice)
-        if MeasuredDistance >= MaxRange:
-            Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))) + ', ' + 'NaN' + '\n'
-            print('No Target')
-        else:
-            Level = SensorHeight - MeasuredDistance
-            Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))) + ', ' + str(Level) + '\n'
-        WriteData(Reading)
-        SendData(Reading)
-        time.sleep(ReadInterval)
-        print(Reading)
+ReadInterval = 60
+File = open('LevelSensorData.csv', 'a')
+File.write('Datetime, Water Level \n')
+File.close()
+
+time.sleep(60 - time.localtime().tm_sec)   # wait to start on the minute
+
+while True:  # Needs to calculate water level from height installed             
+    MeasuredDistance = Measure(serialDevice)
+    MeasureTime = time.time()
+    if MeasuredDistance >= MaxRange:
+        Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + 'NaN' + '\n'
+        print('No Target')
+    else:
+        Level = SensorHeight - MeasuredDistance
+        Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + str(Level) + '\n'
+    WriteData(Reading)
+    SendData(Reading)
+    print(Reading)
+    time.sleep(ReadInterval)
+
     
     
 
