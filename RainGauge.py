@@ -62,7 +62,7 @@ sensor.when_pressed = Tip
 time.sleep(60 - time.localtime().tm_sec) # Wait to start on the minute. TO BE CHANGED
 
 while True:         # Run forever   
-    Green.blink(on_time = 0.5)
+    Green.blink(on_time = 0.5, off_time = 60)
     ResetCount()
     Rainfall = count * Spoonsize
     Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + ', ' + '{:.1f}'.format(Rainfall) + '\n'
