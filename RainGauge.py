@@ -14,7 +14,7 @@ All-inclusive script for local data collection of the raingauge.
     - Data is writing: Red LED on.
 
 Created by Qiao Yan Soh 11 Mar 2021
-Last updated 27 July 2021
+Last updated 12 May 2022
 
 """
 
@@ -36,9 +36,11 @@ count = 0               # Initialize counter
 interval = 300 			# Seconds
 
 # ----- Set up storage file
-File = open('RainGaugeData.csv', 'a')
-File.write('Datetime, Rainfall \n')
-File.close()
+def NewFile(Date):
+	fname = 'RainGaugeData' + Date + '.csv' 
+	File = open(fname, 'a')
+	File.write('Datetime, Rainfall \n')
+	File.close()
 	
 # ----- Functions 
 def Tip():
@@ -51,21 +53,27 @@ def ResetCount():
 	
 def WriteData(CurrentReading):
 	Red.on()
-    File = open('RainGaugeData.csv', 'a')
+	fname = 'RainGaugeData' + time.strftime('%Y-%m-%d', time.localtime(time.time())) + '.csv'
+	File = open(fname, 'a')
 	File.write(CurrentReading)
 	File.close()
 	Red.off()
 	
-# ========== 
+# ==========
 sensor.when_pressed = Tip
 
-time.sleep(60 - time.localtime().tm_sec) # Wait to start on the minute. TO BE CHANGED
+time.sleep(60 - time.localtime().tm_sec)
+Next = time.time()
+ResetCount()
+Green.blink(on_time = 2, off_time = 58)
 
-while True:         # Run forever   
-    Green.blink(on_time = 0.5, off_time = 60)
-    ResetCount()
-    Rainfall = count * Spoonsize
-    Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + ', ' + '{:.1f}'.format(Rainfall) + '\n'
-    WriteData(Reading)
-    time.sleep(interval)
-
+while True:         # Run forever
+	Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))
+	if (time.localtime(Next).tm_hour == 0) & (time.localtime(Next).tm_min == 0):
+		NewFile(Date)
+	Next += interval
+	time.sleep(Next - time.time())
+	Rainfall = count * Spoonsize
+	ResetCount()
+	Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))) + ',' + '{:.1f}'.format(Rainfall)
+	WriteData(Reading)

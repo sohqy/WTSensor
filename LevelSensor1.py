@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-UWHS LEVEL SENSOR DATA LOGGING SCRIPT 
+UWHS LEVEL SENSOR DATA LOGGING SCRIPT
 =============================
-MaxBotix MB7366, Serial Output. 
+MaxBotix MB7366, Serial Output.
 
-All-inclusive script for measuring water level in UWHS tanks. 
------ INITIALISATION OPTIONS: 
+All-inclusive script for measuring water level in UWHS tanks.
+----- INITIALISATION OPTIONS:
     - Start time wait
     - Read interval
-    - Sensor height input (!) 
+    - Sensor height input (!)
 
 ----- INDICATOR OVERVIEW:
     - Script initialized: Yellow LED blinks 5 times.
@@ -16,25 +16,25 @@ All-inclusive script for measuring water level in UWHS tanks.
     - Data is writing: Red LED on.
 
 Created by Qiao Yan Soh 11 Mar 2021
-Last updated 27 July 2021
+Last updated 18 August 2021
 """
 
 from gpiozero import LED
-import time 
+import time
+import numpy as np
 from serial import Serial
 
-# ========== INDICATOR SET UP 
+# ========== INDICATOR SET UP
 Red = LED(26)
 Yellow = LED(19)
 Green = LED(13)
 
 Yellow.blink(on_time = 0.5, off_time = 0.5, n = 5)  # Script initialised
 
-# ========== SENSOR SET UP 
-
+# ========== SENSOR SET UP
 MaxWait = 3     # Number of seconds to wait for reading
 
-def Measure(portName):  
+def Measure(portName):
     ser = Serial(portName, 9600, 8, 'N', 1, timeout=1)
     timeStart = time.time()         # Get current time
     valueCount = 0
@@ -67,38 +67,48 @@ def Measure(portName):
 
 def WriteData(CurrentReading):
     Red.on()
-    File = open('LevelSensorData.csv', 'a')     # Add name of tank here. 
+    fname = '/home/pi/Har_LevelSensorData' + time.strftime('%Y-%m-%d', time.localtime(time.time())) + '.csv'
+    File = open(fname, 'a')     # Add name of tank here.
     File.write(CurrentReading)
     File.close()
+    time.sleep(2)
     Red.off()
-    
-#%% 
+ 
+# ----- Set up storage file
+def NewFile(Date):
+    fname = '/home/pi/Har_LevelSensorData' + Date  + '.csv'
+    File = open(fname, 'a')
+    File.write('Datetime,Water Level\n')
+    File.close()
+
+# ==========
 serialDevice = "/dev/ttyAMA0"   # default for RaspberryPi
 
-MaxRange = 10000        # Outputs in mm.
+MaxRange = 9999        # Outputs in mm.
 SensorHeight = 2000     # mm. TO BE ADJUSTED ACCORDINGLY
 
 ReadInterval = 60       # Seconds
 
-# ----- Set up storage file 
-File = open('LevelSensorData.csv', 'a')
-File.write('Datetime, Water Level \n')
-File.close()
-
 time.sleep(60 - time.localtime().tm_sec)   # Wait to start on the minute
+Next = time.time()
+Green.blink(on_time = 2, off_time = 58)
 
-while True:          
-    Green.blink(on_time = 0.5)
-    MeasuredDistance = Measure(serialDevice)
+while True:
+    Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))
+    if (time.localtime(Next).tm_hour == 0) & (time.localtime(Next).tm_min == 0):
+        NewFile(Date)
+    Next += ReadInterval
+    MeasuredDistance = []
+    i = 0
+    while i < 5:
+        Distance = Measure(serialDevice)
+        if Distance >= MaxRange:
+            MeasuredDistance.append(np.nan)
+        else:
+            MeasuredDistance.append(Distance)
+        i += 1
     MeasureTime = time.time()
-    if MeasuredDistance >= MaxRange:
-        Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + 'NaN' + '\n'
-    else:
-        Level = SensorHeight - MeasuredDistance
-        Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(MeasureTime))) + ', ' + str(Level) + '\n'
+    Reading = str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(MeasureTime))) + ',' + str(np.mean(MeasuredDistance))
     WriteData(Reading)
-    time.sleep(ReadInterval)    # Wait.
-
+    time.sleep(Next - time.time())
     
-    
-
