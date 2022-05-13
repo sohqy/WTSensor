@@ -66,6 +66,8 @@ time.sleep(60 - time.localtime().tm_sec)
 Next = time.time()
 ResetCount()
 Green.blink(on_time = 2, off_time = 58)
+Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))
+NewFile(Date)
 
 while True:         # Run forever
 	Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))

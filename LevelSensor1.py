@@ -92,6 +92,8 @@ ReadInterval = 60       # Seconds
 time.sleep(60 - time.localtime().tm_sec)   # Wait to start on the minute
 Next = time.time()
 Green.blink(on_time = 2, off_time = 58)
+Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))
+NewFile(Date)
 
 while True:
     Date = str(time.strftime('%Y-%m-%d', time.localtime(Next)))
